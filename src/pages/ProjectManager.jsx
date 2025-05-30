@@ -15,8 +15,11 @@ import TransportForm from '../components/forms/TransportForm';
 import LibertyServicesForm from '../components/forms/LibertyServicesForm';
 import { useServices } from '../hooks/useServices';
 import { useTasks } from '../hooks/useTasks';
+import { useLocation } from 'react-router-dom';
 
 const ProjectManager = () => {
+  const location = useLocation();
+  const selectedFile = location.state?.selectedFile;
   const [activeTab, setActiveTab] = useState('Planning');
   const [activeTool, setActiveTool] = useState('Divider');
   

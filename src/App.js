@@ -1,11 +1,12 @@
 import React from 'react';
 import ProjectManager from './pages/ProjectManager';
 import './App.css';
+import Dashboard from './pages/DashBoard';
 
 function App() {
   return (
     <div className="h-screen bg-gray-100 overflow-hidden">
-      <ProjectManager />
+      <Dashboard />
     </div>
   );
 }
