@@ -1,5 +1,4 @@
 import React from 'react';
-import ProjectManager from './pages/ProjectManager';
 import './App.css';
 import Dashboard from './pages/DashBoard';
 

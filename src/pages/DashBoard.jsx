@@ -1,12 +1,174 @@
 import React, { useState } from 'react';
 import { Search, Plus, Eye, ChevronLeft, Calendar, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
+import Header from '../components/common/Header';
+import Sidebar from '../components/common/Sidebar';
+import FileDetailsForm from '../components/forms/FileDetailsForm';
+import ServicesSection from '../components/forms/ServicesSection';
+import TasksSection from '../components/forms/TasksSection';
+import RevenueSection from '../components/forms/revenueSection'; // Fixed import case
+import TabNavigation from '../components/navigation/TabNavigation';
+import ToolsSection from '../components/navigation/ToolsSection';
+import HotelForm from '../components/forms/HotelForm';
+import DateForm from '../components/forms/DateForm';
+import RestaurantForm from '../components/forms/RestaurantForm';
+import ActivityForm from '../components/forms/ActivityForm';
+import TransportForm from '../components/forms/TransportForm';
+import LibertyServicesForm from '../components/forms/LibertyServicesForm';
+import { useServices } from '../hooks/useServices';
+import { useTasks } from '../hooks/useTasks';
+import { useRevenue } from '../hooks/useRevenue';
+import { useLocation } from 'react-router-dom';
+
+const ProjectManager = () => {
+  const [activeTab, setActiveTab] = useState('Planning');
+  const [activeTool, setActiveTool] = useState('Divider');
+  
+  const {
+    services,
+    addService,
+    removeService
+  } = useServices();
+
+  const {
+    tasks,
+    addTask,
+    removeTask
+  } = useTasks();
+
+  const {
+    revenues,
+    addRevenue,
+    removeRevenue,
+    updateRevenue
+  } = useRevenue();
+
+  const [toolButtons, setToolButtons] = useState([
+    { name: 'Divider', active: true },
+    { name: 'Date', active: false },
+    { name: 'Hotel', active: false },
+    { name: 'Restaurant', active: false },
+    { name: 'Activity', active: false },
+    { name: 'Liberty Services', active: false },
+    { name: 'Transport', active: false }
+  ]);
+
+  const handleToolClick = (toolName) => {
+    setActiveTool(toolName);
+    setToolButtons(toolButtons.map(tool => ({
+      ...tool,
+      active: tool.name === toolName
+    })));
+  };
+
+  const renderToolContent = () => {
+    switch (activeTool) {
+      case 'Hotel':
+        return <HotelForm />;
+      case 'Date':
+        return <DateForm />;
+      case 'Restaurant':
+        return <RestaurantForm />;
+      case 'Activity':
+        return <ActivityForm />;
+      case 'Transport':
+        return <TransportForm />;
+      case 'Liberty Services':
+        return <LibertyServicesForm />;
+      default:
+        return null;
+    }
+  };
+
+  const handleSave = () => {
+    console.log('Saving data...', { services, tasks, revenues, activeTool });
+  };
+
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        
+        <div className="flex-1 overflow-auto bg-gray-50">
+          <div className="max-w-6xl mx-auto p-6">
+            <div className="bg-white rounded-lg shadow-md">
+              <FileDetailsForm />
+              
+              {/* FIXED: Services and Tasks sections are always visible */}
+              <ServicesSection
+                services={services}
+                onAddService={addService}
+                onRemoveService={removeService}
+              />
+              
+              <TasksSection
+                tasks={tasks}
+                onAddTask={addTask}
+                onRemoveTask={removeTask}
+              />
+
+              {/* Tab Navigation - always visible */}
+              <TabNavigation
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabs={['Planning', 'Revenue', 'Quotation', 'RoadBook', 'Proposal']}
+              />
+
+              {/* FIXED: Only the tab-specific content below changes */}
+              {activeTab === 'Planning' && (
+                <>
+                  <ToolsSection 
+                    toolButtons={toolButtons} 
+                    onToolClick={handleToolClick}
+                  />
+
+                  {/* Tool-specific content */}
+                  {renderToolContent()}
+                </>
+              )}
+
+              {activeTab === 'Revenue' && (
+                <RevenueSection
+                  revenues={revenues}
+                  onAddRevenue={addRevenue}
+                  onRemoveRevenue={removeRevenue}
+                  onUpdateRevenue={updateRevenue}
+                />
+              )}
+
+              {(activeTab === 'Quotation' || activeTab === 'RoadBook' || activeTab === 'Proposal') && (
+                <div className="p-6 text-center text-gray-500">
+                  {activeTab} section coming soon...
+                </div>
+              )}
+
+              {/* Save Button - always visible */}
+              <div className="border-t px-6 py-4 bg-gray-50">
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSave}
+                    className="bg-blue-600 text-white px-8 py-2 rounded shadow-sm hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Rest of the Dashboard component remains the same...
 const Dashboard = () => {
   const [showFileModal, setShowFileModal] = useState(false);
   const [activeSection, setActiveSection] = useState('Dashboard');
-  const navigate = useNavigate();
-  //
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const stats = [
     { label: 'Pending Files', count: 0, color: 'bg-orange-400', icon: '📄' },
@@ -66,13 +228,17 @@ const Dashboard = () => {
     { fileNumber: '#4422562', client: 'Hugo Eriksson', arrivalDate: '24 Aug 2025' }
   ];
 
-  // Navigation function to redirect to your ProjectManager page
   const handleViewFile = (file) => {
-  navigate('/src/pages/ProjectManager.jsx', { state: { selectedFile: file } });
-};
+    setSelectedFile(file);
+    setCurrentView('project-manager');
+  };
 
-  // If we're in project manager view, show that component
-  if (currentView === '/src/pages/ProjectManager.jsx') {
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedFile(null);
+  };
+
+  if (currentView === 'project-manager') {
     return <ProjectManager onBack={handleBackToDashboard} selectedFile={selectedFile} />;
   }
 
